@@ -47,9 +47,9 @@ class PostIndexView(APIView):
 
     def post(self, request, pk, format=None):
         serializer = PostSerializer(data=request.data)
-        serializer.instance.created_by = request.user
-        serializer.instance.category = Category.objects.get(pk=pk)
-        serializer.instance.date_created = timezone.now()
+        serializer.created_by = request.user
+        serializer.category = Category.objects.get(pk=pk)
+        serializer.date_created = timezone.now()
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
