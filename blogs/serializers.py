@@ -2,13 +2,8 @@ __author__ = 'waqarali'
 
 from rest_framework import serializers
 
-from models import Category, Post
+from models import Category, Post, Comment
 from django.utils import timezone
-
-class CategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = ('id', 'name')
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -27,3 +22,39 @@ class PostSerializer(serializers.ModelSerializer):
         validated_data['category'] = self.category
         validated_data['created_by'] = self.created_by
         return self.Meta.model.objects.create(**validated_data)
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ('id', 'name',)
+
+
+class CategoryDetailSerializer(serializers.ModelSerializer):
+    posts = PostSerializer(many=True)
+
+    class Meta:
+        model = Category
+        fields = ('id', 'name', 'posts')
+
+
+class CommentsSerializer(serializers.ModelSerializer):
+    commented_by = serializers.ReadOnlyField(source='user.username')
+
+    class Meta:
+        model = Comment
+        fields = ('text', 'dated', 'commented_by')
+
+
+class PostDetailSerializer(serializers.ModelSerializer):
+    category_name = serializers.ReadOnlyField(source='category.name')
+    category_id = serializers.ReadOnlyField(source='category.id')
+    created_by = serializers.ReadOnlyField(source='created_by.username')
+    date_created = serializers.ReadOnlyField()
+    comments = CommentsSerializer(many=True)
+
+    class Meta:
+        model = Post
+        fields = ('title', 'category_name', 'category_id', 'created_by', 'date_created', 'comments')
+
+

@@ -8,8 +8,8 @@ from rest_framework import status
 from rest_framework import permissions, authentication
 from django.utils import timezone
 
-from models import Category
-from serializers import CategorySerializer, PostSerializer
+from models import Category, Post, Comment
+from serializers import CategorySerializer, PostSerializer, CategoryDetailSerializer, PostDetailSerializer
 
 
 def index(request):
@@ -18,10 +18,7 @@ def index(request):
     return JsonResponse(serializier.data, safe=False)
 
 
-class IndexView(APIView):
-    authentication_classes = (authentication.SessionAuthentication, authentication.BasicAuthentication)
-    permission_classes = (permissions.IsAuthenticated,)
-
+class CategoryListing(APIView):
     def get(self, request, format=None):
         snippets = Category.objects.all()
         serializer = CategorySerializer(snippets, many=True)
@@ -35,15 +32,14 @@ class IndexView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class PostIndexView(APIView):
+class PostsListing(APIView):
     authentication_classes = (authentication.SessionAuthentication, authentication.BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request, pk, format=None):
         category = Category.objects.get(pk=pk)
-        posts = category.get_posts
-        serializer = PostSerializer(posts, many=True)
-        return Response(serializer.data)
+        category_serializer = CategoryDetailSerializer(category)
+        return Response(category_serializer.data)
 
     def post(self, request, pk, format=None):
         serializer = PostSerializer(data=request.data)
@@ -54,3 +50,24 @@ class PostIndexView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk , format=None):
+        category = Category.objects.get(pk=pk)
+        category.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def put(self, request, pk, format=None):
+        category = Category.objects.get(pk=pk)
+        serializer = CategorySerializer(category, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CommentListing(APIView):
+
+    def get(self, request, pk, format=None):
+        post = Post.objects.get(pk=pk)
+        post_serializer = PostDetailSerializer(post)
+        return Response(post_serializer.data)

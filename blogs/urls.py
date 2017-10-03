@@ -6,8 +6,10 @@ from . import views
 
 
 urlpatterns = [
-    url(r'^$', views.IndexView.as_view(), name='Index'),
-    url(r'^category/(?P<pk>[0-9]+)/$', views.PostIndexView.as_view(), name='Post')
+    url(r'^$', views.CategoryListing.as_view(), name='Category'),
+    url(r'^category/(?P<pk>[0-9]+)/$', views.PostsListing.as_view(), name='Post'),
+    url(r'^post/(?P<pk>[0-9]+)/$', views.CommentListing.as_view(), name='Post')
+
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
