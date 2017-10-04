@@ -2,8 +2,7 @@ __author__ = 'waqarali'
 
 from rest_framework import serializers
 
-from models import Category, Post, Comment
-from django.utils import timezone
+from models import Category, Post, Comment, Like
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -15,13 +14,6 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = ('id', 'title', 'description', 'category_name', 'Owner', 'date_created', 'is_deleted')
-
-    def create(self, validated_data):
-        validated_data['is_deleted'] = False
-        validated_data['date_created'] = timezone.now()
-        validated_data['category'] = self.category
-        validated_data['created_by'] = self.created_by
-        return self.Meta.model.objects.create(**validated_data)
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -40,10 +32,12 @@ class CategoryDetailSerializer(serializers.ModelSerializer):
 
 class CommentsSerializer(serializers.ModelSerializer):
     commented_by = serializers.ReadOnlyField(source='user.username')
+    dated = serializers.ReadOnlyField()
+    comment = serializers.CharField(source='text')
 
     class Meta:
         model = Comment
-        fields = ('text', 'dated', 'commented_by')
+        fields = ('id', 'comment', 'dated', 'commented_by')
 
 
 class PostDetailSerializer(serializers.ModelSerializer):
@@ -58,3 +52,25 @@ class PostDetailSerializer(serializers.ModelSerializer):
         fields = ('title', 'category_name', 'category_id', 'created_by', 'date_created', 'comments')
 
 
+class LikeSerializer(serializers.ModelSerializer):
+    User = serializers.ReadOnlyField(source='user.username')
+
+    class Meta:
+        model = Like
+        fields = ('User',)
+
+
+class CommentDetailSerializer(serializers.ModelSerializer):
+    comment = serializers.CharField(source='text')
+    Date = serializers.DateTimeField(source='dated')
+    is_deleted = serializers.ReadOnlyField()
+    likes = LikeSerializer(many=True)
+    like_count = serializers.SerializerMethodField()
+    commented_by = serializers.CharField(source='user.username')
+
+    class Meta:
+        model = Comment
+        fields = ('id', 'comment', 'Date', 'is_deleted', 'likes', 'like_count', 'commented_by')
+
+    def get_like_count(self, obj):
+        return obj.likes.count()

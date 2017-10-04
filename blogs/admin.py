@@ -5,7 +5,6 @@ from django.contrib import admin
 
 from blogs.models import Comment, Category, Like, Post
 
-admin.site.register(Comment)
 admin.site.register(Like)
 
 
@@ -28,6 +27,9 @@ class AdminPostModel(admin.ModelAdmin):
     category_name.short_description = "Category"
     username.short_description = 'Posted By'
 
+class AdminCommentModel(admin.ModelAdmin):
+    list_display = ('id', 'text')
 
 admin.site.register(Category, AdminCategoryModel)
 admin.site.register(Post, AdminPostModel)
+admin.site.register(Comment, AdminCommentModel)
